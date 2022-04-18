@@ -76,7 +76,7 @@ storeprod.push(product)
 let resProd=storeprod.flat()
 console.log(resProd)
 for(let i=0;i<resProd.length;i++){
-    if(resProd.isDeleted==true){return res.status(400).send({status:false,msg:"some product you wanna order id deleted"})}
+    if(resProd.isDeleted==true){return res.status(400).send({status:false,msg:"some product you wanna order is deleted"})}
     totalPrice=totalPrice+(storeprod[i].price)*(items[i].quantity)
     totalQuantity=totalQuantity+items[i].quantity
 }
@@ -110,9 +110,6 @@ if(!checkuser){return res.status(404).send({status:false,msg:"user with this id 
 if(!isValidObjectId(orderId)){return res.status(400).send({status:false,msg:"invalid orderId"})}
 let checkOrder=await orderModel.findById(orderId)
 if(!checkOrder){return res.status(404).send({status:false,msg:"order with this id not found"})}
-let checkOrderdata=await OrderModel.findById(orderId)
-if(!checkOrderdata){return res.status(404).send({status:false,msg:"order with this Id not found"})}
-console.log(checkOrderdata)
 if(!isvalidStatus(status)){return res.status(400).send({status:false,msg:"invalid status"})}
 if(checkOrderdata.cancellable==false){return res.status(400).send({status:false,msg:"you can't update your order, since it is not cancellable"})}
 let updateOrder=await orderModel.findOneAndUpdate({_id:orderId},{status:status},{new:true})
