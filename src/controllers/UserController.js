@@ -15,6 +15,8 @@ const isValidObjectId = function (objectId) {
     if (typeof value === "string" && value.trim().length === 0) return false;
     return true;
   };
+
+
 const isValid = function (value) {
     if (typeof value === "undefined" || typeof value == "null") {
       return false;
@@ -35,7 +37,14 @@ const isValid = function (value) {
     }
   };
 
+  let isvalidPin=function(value){
+    if ((value.trim().length = 6 ));
+{return true}
+
+
+}
   
+
 
   
 
@@ -46,7 +55,7 @@ try{
         let {fname,lname,email,password,phone,address,} =data
         let files=req.files
 
-        if (!isvalidRequesbody(data)) {
+        if (!(isvalidRequesbody(data)||(files))) {
             return res.status(400).send({ status: false, msg: "please provide Data" })
         }
         
@@ -72,15 +81,23 @@ try{
         if(!isValid(address.shipping.street)){return res.status(400).send({status:false,msg:"please give shipping street"})}
 
         if(!isValid(address.shipping.city)){return res.status(400).send({status:false,msg:"please give shipping city"})}
-
         if(!isValid(address.shipping.pincode)){return res.status(400).send({status:false,msg:"please give shipping pincode"})}
+        if (!/^([+]\d{2})?\d{6}$/.test(address.shipping.pincode.trim())) {
+            return res.status(400).send({ status: false, message: 'Shipping PinCode not valid, please provide 6 Digit valid pinCode' });
+        }
 
+    
         if(!isValid(address.billing.street)){return res.status(400).send({status:false,msg:"please give billing street"})}
 
         if(!isValid(address.billing.city)){return res.status(400).send({status:false,msg:"please give shipping street"})}
+        
 
         if(!isValid(address.billing.pincode)){return res.status(400).send({status:false,msg:"please give billing pincode"})}
+        if (!/^([+]\d{2})?\d{6}$/.test(address.billing.pincode.trim())) {
+            return res.status(400).send({ status: false, message: 'Billing PinCode not valid, please provide 6 Digit valid pinCode' });
+        }
 
+    
           
         // if (!isValid(profileImage)) {
         //     return res.status(400).send({ status: false, ERROR: "profileimage required" })
@@ -89,6 +106,9 @@ try{
         if (!(password.trim().length >= 8 && password.trim().length <= 15)) {
             return res.status(400).send({ status: false, message: "Please provide password with minimum 8 and maximum 14 characters" });;
         }
+
+        if(!files.length>0){return res.status(400).send({status:false,msg:"please give file"})}
+
         profileImage = await s3link.uploadFile(files[0])
         
         const DuplicateEmail = await UserModel.findOne({ email });
@@ -149,7 +169,7 @@ const login = async function (req, res) {
         const data = req.body
         const { email, password } = data
         let query = req.query
-        if (isValidRequestBody(query)) {
+        if (isvalidRequesbody(query)) {
             return res.status(400).send({ status: false, message: 'this is not allowed' })
         }
 
@@ -179,7 +199,9 @@ const login = async function (req, res) {
 
         const token = jwt.sign(payLoad, secretKey, { expiresIn: "1hr" })
 
-        res.setHeader("Authorization","Bearer"+token)
+        
+    
+        
 
 
         return res.status(201).send({ status: true, message: "login successful", data: {userId: user._id,token} })
@@ -218,84 +240,101 @@ catch(err){res.status(500).send({status:false,error:err.message})}
 const updateUser=async function(req,res){
     try{
 
-        let userId=req.params.userId
-        if(!isValidObjectId(userId)){return res.status(400).send({status:false,msg:"invalid userId format"})}
-        let checkUserId=await UserModel.findById(userId)
-        if(!checkUserId){return res.status(404).send({status:false,msg:"userId not found"})}
+        const userId = req.params.userId
+      
+      if (!isValidObjectId(userId)) {
+          return res.status(400).send({ status: false, msg: "userId is invalid" })
+      }
+      checkuser=await UserModel.findById(userId)
+      if(!checkuser){return res.status(404).send({status:true,msg:"user with this id not found"})}
+      let { fname, lname, email, phone, password, address } = req.body
+      let file = req.files
+      const dataObject = {};
+      if (!(isvalidRequesbody(req.body)||(file))) {
+          return res.status(400).send({ status: false, msg: "enter data to update" })
+      }
+      if (isValid(fname)) {
+          dataObject['fname'] =fname
+      }
+      if (isValid(lname)) {
+          dataObject['lname'] = lname
+      }
+      if (isValid(email)) {
+          let findMail = await UserModel.findOne({ email: email })
+          if (findMail) {
+              return res.status(400).send({ status: false, msg: "this email is already register" })
+          }
+          dataObject['email'] = email
+      }
+      if (isValid(phone)) {
+          let findPhone = await UserModel.findOne({ phone: phone })
+          if (findPhone) {
+              return res.status(400).send({ status: false, msg: "this mobile number is already register" })
+          }
+          dataObject['phone'] = phone
+      }
+      if (isValid(password)) {
+          if (!password.length >= 8 && password.length <= 15) {
+              return res.status(400).send({ status: false, msg: "password length should be 8 to 15" })
+          }
+          let saltRound = 10
+          const hash = await bcrypt.hash(password, saltRound)
+          dataObject['password'] = hash
+      }
+     
+      if (file.length > 0) {
+          let uploadFileUrl = await s3link.uploadFile(file[0])
+          dataObject['profileImage'] = uploadFileUrl
+      }
 
-        let data=req.body
-        if(!isvalidRequesbody(data)){return res.status(400).send({status:false,msg:"please give some data to update"})}
-        let {fname,lname,email,password,phone,address,} =data
+      if (address) {
+          
+          if (address.shipping) {
+              if (address.shipping.street) {
 
-       
+                  dataObject['address.shipping.street'] = address.shipping.street
+              }
+              if (address.shipping.city) {
 
-if(!isvalidStringOnly(fname)){return res.status(400).send({status:false,msg:"please give fname"})}
-if(!isvalidStringOnly(lname)){return res.status(400).send({status:false,msg:"please give lname"})}
-       
-
-       
-           if(!isvalidStringOnly(password)){return res.status(400).send({status:false,msg:"please give password"})}
-
-       
-
-    
-        //    if(!isvalidStringOnly(profileImage)){return res.status(400).send({status:false,msg:"please provide image"})}
-       
-
-    if(!isvalidStringOnly(email)){return res.status(400).send({status:false,msg:"please give emaill"})}
-    if(email){
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-        return res
-          .status(400)
-          .send({ status: false, msg: `Invalid email address!` });
-      }      
-
-      let checkDuplicateemail=await UserModel.findOne({email})
-      if(checkDuplicateemail){return res.status(400).send({status:false,msg:"this email is already registred"})}}
-
-
-
-    if(!isvalidStringOnly(phone)){return res.status(400).send({status:false,msg:"please provide phone number"})}
-if(phone){
-        if (!/^([+]\d{2})?\d{10}$/.test(phone)) {
-            return res
-              .status(400)
-              .send({ status: false, msg: "please provide a valid phone Number" });
+                  dataObject['address.shipping.city'] = address.shipping.city
+              }
+              if (address.shipping.pincode) {
+                  
+                  if(!/(^[0-9]{6}(?:\s*,\s*[0-9]{6})*$)/.test(address.shipping.pincode)){
+                   return res.status(400).send({status:false, msg:`pincode six digit number`})
+                  }
+                 
+                  dataObject['address.shipping.pincode'] = address.shipping.pincode
+                  
+              }
+              
           }
 
-          const duplicatePhone = await UserModel.findOne({ phone })
-        if (duplicatePhone) {
-            return res.status(400).send({ status: false, message: "This phone number already exists with another user" });
-        }
-}
+          if (address.billing) {
+              if (address.billing.street) {
 
-let files=req.files
-let profileImage
+                  dataObject['address.billing.street'] = address.billing.street
+              }
+              if (address.billing.city) {
 
-if(files.length>0){
- profileImage = await s3link.uploadFile(files[0])}
+                  dataObject['address.billing.city'] = address.billing.city
+              }
+              if (address.billing.pincode) {
+                 
+                  if(!/(^[0-9]{6}(?:\s*,\s*[0-9]{6})*$)/.test(address.billing.pincode)){
+                    return res.status(400).send({status:false, msg:`pincode six digit number`})
+                   }
+                  dataObject['address.billing.pincode'] = address.billing.pincode
+              }
+          }
+      }
+      const updateProfile = await UserModel.findOneAndUpdate({_id:userId }, dataObject , { new: true })
+      if (!updateProfile) {
+          return res.status(404).send({ status: false, msg: "user profile not found" })
+      }
+      return res.status(200).send({ status: true, msg: "User Profile updated", data: updateProfile })
 
-let hash
-if(password){
-  hash = bcrypt.hashSync(password, saltRounds);}
-
-const userData = {
-    fname,
-    lname,
-    profileImage,
-    email,
-    password:hash,
-    phone,
-    address
-
-}
-
-
-if(!isvalidStringOnly(address)){return res.status(400).send({status:false,msg:"please provide address"})}
-let updateUser=await UserModel.findOneAndUpdate({userId},userData,{new:true})
-res.status(200).send({status:true,msg:"updated sucessfully",data:updateUser})
-
-    }
+  }
     catch(err){res.status(500).send({status:false,error:err.message})}
 }
 
