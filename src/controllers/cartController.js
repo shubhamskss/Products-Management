@@ -292,7 +292,7 @@ let deleteCart=async function(req,res){
    let deleteCart=await cartModel.findOneAndUpdate({userId:userId},{items,totalPrice,totalItems},{new:true})
    
    
-   res.status(204).send({status:true,msg:"deleted sucessfully",data:deleteCart})}
+   res.status(200).send({status:true,msg:"deleted sucessfully",data:deleteCart})}
    catch(err){res.status(500).send({status:false,error:err.message})}
 }
 
