@@ -100,6 +100,7 @@ catch(err){res.status(500).send({status:false,error:err.message})}
 
 // ===============================================================update order====================================================
 let updateOrder= async function(req,res){
+    try{
 let userId=req.params.userId
 let orderId=req.body.orderId
 let status=req.body.status
@@ -111,10 +112,11 @@ if(!isValidObjectId(orderId)){return res.status(400).send({status:false,msg:"inv
 let checkOrder=await orderModel.findById(orderId)
 if(!checkOrder){return res.status(404).send({status:false,msg:"order with this id not found"})}
 if(!isvalidStatus(status)){return res.status(400).send({status:false,msg:"invalid status"})}
-if(checkOrderdata.cancellable==false){return res.status(400).send({status:false,msg:"you can't update your order, since it is not cancellable"})}
+if(checkOrder.cancellable==false){return res.status(400).send({status:false,msg:"you can't update your order, since it is not cancellable"})}
 let updateOrder=await orderModel.findOneAndUpdate({_id:orderId},{status:status},{new:true})
 res.status(200).send({status:true,msg:"order updated sucessfully",data:updateOrder})
 }
+catch(err){res.staatus(500).send({status:false,error:err.message})}}
 
 
 

@@ -208,7 +208,7 @@ const updatecart = async function(req, res){
         }
 
         const findCart = await cartModel.findOne({_id:cartId,isDeleted:false})
-        
+
         if(findCart.userId!=userId){return res.status(400).send({staus:false,msg:"cart is of diffrent user"})}
         if(!findCart){
             return res.status(404).send({status:false,message:'no cart found with the given cart id'})
@@ -234,12 +234,12 @@ const updatecart = async function(req, res){
               if(removeProduct===1){
                   if(item[i].quantity===1 && removeProduct===1){
                       const removeCart = await cartModel.findByIdAndUpdate({_id:cartId},{$pull:{items:{productId:productId}},
-                        totalPrice:findCart.totalPrice-productPrice[i],totalItems:findCart.totalItems-1},{ new: true })
+                        totalPrice:findCart.totalPrice-productPrice,totalItems:findCart.totalItems-1},{ new: true })
                         return res.status(200).send({status:true,message:'product removed',Data:removeCart})
                   }
 
                   item[i].quantity = item[i].quantity-1
-                  const updateCart = await cartModel.findByIdAndUpdate({_id:cartId},{items:item,totalPrice:findCart.totalPrice-product.price-1},
+                  const updateCart = await cartModel.findByIdAndUpdate({_id:cartId},{items:item,totalPrice:findCart.totalPrice-product.price},
                     { new: true })
                     return res.status(200).send({status:true,message:'product item decreased successfully',Data:updateCart})
               }

@@ -37,13 +37,8 @@ const isValid = function (value) {
     }
   };
 
-  let isvalidPin=function(value){
-    if ((value.trim().length = 6 ));
-{return true}
+ 
 
-
-}
-  
 
 
   
@@ -89,7 +84,7 @@ try{
     
         if(!isValid(address.billing.street)){return res.status(400).send({status:false,msg:"please give billing street"})}
 
-        if(!isValid(address.billing.city)){return res.status(400).send({status:false,msg:"please give shipping street"})}
+        if(!isValid(address.billing.city)){return res.status(400).send({status:false,msg:"please give billing pincode"})}
         
 
         if(!isValid(address.billing.pincode)){return res.status(400).send({status:false,msg:"please give billing pincode"})}
