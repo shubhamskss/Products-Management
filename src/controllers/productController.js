@@ -123,17 +123,22 @@ let getProducts= async function (req, res) {
       let data = req.query;
   
       const filterquery = { isDeleted: false };
-      const {name,size,priceGreaterThan,priceLessThan } = data;
+      const {name,size,priceGreaterThan,priceLessThan,sortbyprice } = data;
   
     
       if (isValid(size)) {
+    
         filterquery.availableSizes = size.trim();
       }
   
       if (!isvalidStringOnly(size)) {
         return res.status(400).send({ staus: false, msg: "size required" });
       }
-  
+  // if(size){
+  //   for(let i=0;i<size.length;i++){
+  //     filterquery.availableSizes=size
+  //   }
+  // }
       
       if (isValid(name)) {
           
@@ -154,24 +159,35 @@ let getProducts= async function (req, res) {
     }
 
 
-      console.log(filterquery)
-  
-      const searchProducts = await productModel.find(filterquery).sort({price:-1})
-
-      // const allProducts = searchProducts.sort(function (a, b) { return a.title.toLowerCase() > b.title.toLowerCase() ? 1 : -1 })
+      
+      
+      let searchProducts
+      
+      if(sortbyprice){
+        filterquery.sortbyprice=sortbyprice
+        
+      if(sortbyprice==-1){
+        
+       searchProducts = await productModel.find(filterquery).sort({price:-1})
+      return res.status(200).send({status:true,msg:"price,higher to lower",data:searchProducts})}
+      if(sortbyprice==1){
+        
+         searchProducts = await productModel.find(filterquery).sort({price:1})
+        return res.status(200).send({status:true,msg:"price lower to higher",data:searchProducts})}
+        
+         else{return res.status(400).send({status:false,msg:"sortbyprice only take 1 and -1"})}
+        }
+         
+         else{
+    searchProducts=await productModel.find(filterquery)}
 
   
       if (Array.isArray(searchProducts) && searchProducts.length == 0) {
         return res.status(404).send({ status: false, msg: "No product found" });
       }
-      
-       
-       
-       
-       
-  
       res.status(200).send({ status: true,msg:"sucess", data: searchProducts });
-    } catch (err) {
+    } 
+    catch (err) {
       res.status(500).send({ status: false, error: err.message });
     }
   };

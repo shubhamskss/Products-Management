@@ -208,6 +208,8 @@ const updatecart = async function(req, res){
         }
 
         const findCart = await cartModel.findOne({_id:cartId,isDeleted:false})
+        
+        if(findCart.userId!=userId){return res.status(400).send({staus:false,msg:"cart is of diffrent user"})}
         if(!findCart){
             return res.status(404).send({status:false,message:'no cart found with the given cart id'})
         }
@@ -217,11 +219,14 @@ const updatecart = async function(req, res){
         }
 
         let item = findCart.items
+
+        if(item.length==0){return res.status(400).send({status:false,ms:"cart is empty nothing to remove"})}
         for(let i=0; i < item.length; i++){
             if(item[i].productId == productId){
               let  productPrice = item[i].quantity*product.price
               if(removeProduct===0){
-                  const productItem = await cartModel.findByIdAndUpdate({_id:cartId},{$pull:{items:{productId:productId}},
+                  
+                  const productItem = await cartModel.findOneAndUpdate({_id:cartId},{$pull:{items:{productId:productId}},
                     totalPrice:findCart.totalPrice-productPrice,totalItems:findCart.totalItems-1},{ new: true })
                     return res.status(200).send({status:true,message:'product removed suceesfully',Data:productItem})
               }
@@ -229,7 +234,7 @@ const updatecart = async function(req, res){
               if(removeProduct===1){
                   if(item[i].quantity===1 && removeProduct===1){
                       const removeCart = await cartModel.findByIdAndUpdate({_id:cartId},{$pull:{items:{productId:productId}},
-                        totalPrice:findCart.totalPrice-productPrice,totalItems:findCart.totalItems-1},{ new: true })
+                        totalPrice:findCart.totalPrice-productPrice[i],totalItems:findCart.totalItems-1},{ new: true })
                         return res.status(200).send({status:true,message:'product removed',Data:removeCart})
                   }
 
@@ -295,6 +300,7 @@ let deleteCart=async function(req,res){
    res.status(200).send({status:true,msg:"deleted sucessfully",data:deleteCart})}
    catch(err){res.status(500).send({status:false,error:err.message})}
 }
+
 
 
 

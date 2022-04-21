@@ -98,10 +98,7 @@ try{
         }
 
     
-          
-        // if (!isValid(profileImage)) {
-        //     return res.status(400).send({ status: false, ERROR: "profileimage required" })
-        // }
+        
 
         if (!(password.trim().length >= 8 && password.trim().length <= 15)) {
             return res.status(400).send({ status: false, message: "Please provide password with minimum 8 and maximum 14 characters" });;
